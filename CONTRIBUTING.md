@@ -45,7 +45,7 @@ rark/
 └── examples/             Runnable demos
 ```
 
-Read `docs/02-architecture.md` before touching the kernel — it documents time-scale boundaries, at-least-once semantics, and crash recovery invariants that are easy to break accidentally.
+Read [`docs/en/02-architecture.md`](docs/en/02-architecture.md) (or [`docs/zh/02-architecture.md`](docs/zh/02-architecture.md) for Chinese) before touching the kernel — it documents time-scale boundaries, at-least-once semantics, and crash recovery invariants that are easy to break accidentally.
 
 ---
 

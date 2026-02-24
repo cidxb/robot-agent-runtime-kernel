@@ -1,3 +1,5 @@
+> [English](../en/01-philosophy.md) | **中文**
+
 # RARK：Robot Agent Runtime Kernel
 
 ## —— 面向真实人机交互与机器人落地的时间一致性内核

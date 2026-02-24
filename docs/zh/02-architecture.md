@@ -1,3 +1,5 @@
+> [English](../en/02-architecture.md) | **中文**
+
 # RARK 当前实现架构
 
 > 本文描述当前代码库的实际实现，是 `01-philosophy.md` 愿景的当前落地状态。
