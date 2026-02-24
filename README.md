@@ -37,12 +37,21 @@ Current solutions fall into two traps:
 
 ```mermaid
 flowchart TB
-    DL["🧠 Decision Layer\nLLM · planner · human\n─────────────────────────────────\n'pour water'   priority=3   target='kitchen_cup'"]
-    RK["⚙️ RARK\n─────────────────────────────────────────\n◆ Priority preemption  — interrupt any task now\n◆ Suspend & resume     — pick up exactly where left off\n◆ Task dependencies    — A finishes before B starts\n◆ Automatic retry      — transient faults, handled\n◆ Crash recovery       — reboot, carry on\n◆ REST API             — drive from anything"]
-    EL["🤖 Execution Layer\nROS 2 · hardware · APIs"]
+    DL["🧠 Decision Layer — LLM · planner · human"]
 
-    DL -->|"HTTP / Python API"| RK
-    RK -->|"async def skill(task)"| EL
+    subgraph RARK["⚙️  RARK"]
+        f1["◆ Priority preemption  — interrupt any task now"]
+        f2["◆ Suspend & resume     — pick up exactly where left off"]
+        f3["◆ Task dependencies    — A finishes before B starts"]
+        f4["◆ Automatic retry      — transient faults, handled"]
+        f5["◆ Crash recovery       — reboot, carry on"]
+        f6["◆ REST API             — drive from anything"]
+    end
+
+    EL["🤖 Execution Layer — ROS 2 · hardware · APIs"]
+
+    DL -->|"HTTP / Python API"| RARK
+    RARK -->|"async def skill(task)"| EL
 ```
 
 The LLM decides **what** to do. RARK decides **whether the robot can do it right now** and manages everything between "start" and "done" — including obstacles, crashes, and retries.
