@@ -35,28 +35,14 @@ Current solutions fall into two traps:
 
 ## What RARK does
 
-```
-┌──────────────────────────────────────────────────────┐
-│         Decision Layer  (LLM · planner · human)      │
-│    "pour water"  "priority=3"  "target=kitchen_cup"  │
-└─────────────────────────┬────────────────────────────┘
-                           │  HTTP  /  Python API
-┌─────────────────────────▼────────────────────────────┐
-│                        RARK                           │
-│                                                       │
-│  ◆ Priority preemption  — interrupt any task now      │
-│  ◆ Suspend & resume     — pick up exactly where       │
-│                           the robot left off          │
-│  ◆ Task dependencies    — A finishes before B starts  │
-│  ◆ Automatic retry      — transient faults, handled   │
-│  ◆ Crash recovery       — reboot, carry on            │
-│  ◆ REST API             — drive from anything         │
-│                                                       │
-└─────────────────────────┬────────────────────────────┘
-                           │  async def skill(task)
-┌─────────────────────────▼────────────────────────────┐
-│         Execution Layer  (ROS 2 · hardware · APIs)    │
-└──────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    DL["🧠 Decision Layer\nLLM · planner · human\n─────────────────────────────────\n'pour water'   priority=3   target='kitchen_cup'"]
+    RK["⚙️ RARK\n─────────────────────────────────────────\n◆ Priority preemption  — interrupt any task now\n◆ Suspend & resume     — pick up exactly where left off\n◆ Task dependencies    — A finishes before B starts\n◆ Automatic retry      — transient faults, handled\n◆ Crash recovery       — reboot, carry on\n◆ REST API             — drive from anything"]
+    EL["🤖 Execution Layer\nROS 2 · hardware · APIs"]
+
+    DL -->|"HTTP / Python API"| RK
+    RK -->|"async def skill(task)"| EL
 ```
 
 The LLM decides **what** to do. RARK decides **whether the robot can do it right now** and manages everything between "start" and "done" — including obstacles, crashes, and retries.
@@ -143,6 +129,35 @@ Task(name="pour_water",     priority=3)   # normal operation
 Task(name="avoid_obstacle", priority=10)  # drops everything
 ```
 
+Here is what actually happens inside RARK when the obstacle sensor fires mid-pour:
+
+```mermaid
+sequenceDiagram
+    participant LLM as 🧠 Planner
+    participant K   as ⚙️ RARK
+    participant S   as skill coroutine
+    participant HW  as 🤖 Hardware
+
+    LLM->>K: submit pour_water (priority=3)
+    K->>S: asyncio.create_task(pour_water)
+    S->>HW: move_arm_to_cup()
+    S-->>K: metadata["stage"] = 1  (checkpoint written)
+
+    Note over LLM,HW: obstacle sensor fires 💥
+
+    LLM->>K: interrupt avoid_obstacle (priority=10)
+    K->>S: asyncio.Task.cancel()
+    Note over K: pour_water → PAUSED<br/>(stage=1 persisted to SQLite)
+    K->>S: asyncio.create_task(avoid_obstacle)
+    S->>HW: emergency_stop()
+    S->>HW: back_up_slowly()
+    Note over K: avoid_obstacle → COMPLETED
+
+    K->>S: asyncio.create_task(pour_water) ← resumes at stage=1
+    S->>HW: tilt_and_pour()
+    Note over K: pour_water → COMPLETED ✓
+```
+
 ### Suspend & resume with checkpoints
 
 Interrupted tasks enter `PAUSED` and rejoin the queue. Skills can write checkpoints to `task.metadata` so they don't start over from scratch:
@@ -204,17 +219,29 @@ runner = SkillRunner(db_path="robot.db", crash_policy="fail")
 
 ## Task lifecycle
 
-```
-             submit()
-  ──────────────────> PENDING ──── tick() ──── ACTIVE ─────────> COMPLETED
-                         ▲                       │                (terminal)
-                         │  retry budget left     ├─── exception ─> FAILED
-                         └────────────────────────┘                (terminal)
-                                                  │
-                               interrupt()        ├─── interrupt ─> PAUSED
-                                                  │     (re-queued, resumes later)
-                                                  └─── cancel ───> CANCELLED
-                                                                   (terminal)
+```mermaid
+stateDiagram-v2
+    direction LR
+
+    [*]       --> PENDING   : submit()
+    PENDING   --> ACTIVE    : scheduler tick
+    ACTIVE    --> PENDING   : exception (retry budget left)
+    ACTIVE    --> PAUSED    : interrupt()
+    ACTIVE    --> COMPLETED : skill returns
+    ACTIVE    --> FAILED    : exception (budget exhausted)
+    ACTIVE    --> CANCELLED : cancel()
+    PAUSED    --> ACTIVE    : scheduler tick
+
+    COMPLETED --> [*]
+    FAILED    --> [*]
+    CANCELLED --> [*]
+
+    note right of PAUSED
+        metadata checkpoint
+        preserved in SQLite —
+        skill resumes from
+        last written stage
+    end note
 ```
 
 ---
