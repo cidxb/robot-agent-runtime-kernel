@@ -1,0 +1,18 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "rark"
+version = "0.1.0"
+description = "Robot Agent Runtime Kernel"
+requires-python = ">=3.11"
+dependencies = ["aiosqlite"]
+
+[project.optional-dependencies]
+dev    = ["pytest", "pytest-asyncio", "httpx"]
+server = ["fastapi", "uvicorn[standard]"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["rark/tests"]
