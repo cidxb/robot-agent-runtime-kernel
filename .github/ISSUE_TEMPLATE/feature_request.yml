@@ -1,0 +1,46 @@
+name: Feature Request
+description: Propose a new capability or improvement.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Check the [roadmap](../../docs/04-roadmap.md) and open discussions before filing —
+        your idea may already be tracked.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the real-world situation where RARK falls short today.
+      placeholder: "When a robot task exceeds its deadline, there's no automatic cancellation..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: How should RARK behave? Pseudocode or API sketches are welcome.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What workarounds exist today, and why are they insufficient?
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Which layer does this touch?
+      options:
+        - Core kernel (scheduler / state machine)
+        - SkillRunner (execution / retry)
+        - Persistence (SQLite store)
+        - HTTP API (server.py)
+        - Examples / documentation
+        - Multiple layers
+    validations:
+      required: true
