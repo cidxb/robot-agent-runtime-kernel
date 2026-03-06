@@ -314,17 +314,19 @@ rark/
 
 RARK is early-stage and there is a lot of interesting ground to cover. Contributions are welcome at every level.
 
-**Good first issues:**
-- Add a WebSocket endpoint that streams task state changes in real-time
-- Write a ROS 2 skill adapter template (`async def ros_skill(task)` → action client)
-- Add `blocked_by` and `retry` fields to the HTTP submit request
-- Write an LLM integration example (OpenAI / Claude → `/tasks` API)
+**Good first issues (Phase 4):**
+- Add `blocked_by` and `retry` fields to the HTTP submit request ([4.1](docs/en/04-roadmap.md#41-blocked_by-and-retry-in-http-api))
+- Add a WebSocket endpoint that streams task state changes in real-time ([4.2](docs/en/04-roadmap.md#42-websocket-event-stream))
+- Time-bounded tasks: `deadline` field that auto-fails overdue tasks ([4.3](docs/en/04-roadmap.md#43-time-bounded-tasks-deadline))
 
-**Bigger projects:**
-- Time-bounded tasks: `deadline` field that auto-cancels overdue tasks
-- Task groups: submit a set of tasks as a unit, cancel all if any fails
-- Observability: OpenTelemetry span injection at state transition hooks
-- Persistent `blocked_by`: survive restarts for dependency chains
+**Bigger projects (Phase 5–6):**
+- Subprocess skill isolation: run skills in child processes so a crash doesn't take down the kernel ([5.1](docs/en/04-roadmap.md#51-subprocess-skill-isolation))
+- Resource Domains: per-subsystem scheduling for multi-actuator robots ([5.2](docs/en/04-roadmap.md#52-resource-domains))
+- Task groups: submit a set of tasks as a unit, cancel all if any fails ([6.1](docs/en/04-roadmap.md#61-task-groups-atomic-batch))
+- ROS 2 skill adapter template ([6.2](docs/en/04-roadmap.md#62-ros-2-skill-adapter-template))
+- OpenTelemetry span injection at state transition hooks ([6.3](docs/en/04-roadmap.md#63-opentelemetry-span-injection))
+
+See the full [Roadmap](docs/en/04-roadmap.md) for details.
 
 **How to contribute:**
 1. Fork the repository

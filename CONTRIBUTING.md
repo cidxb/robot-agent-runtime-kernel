@@ -73,25 +73,25 @@ Commit message format: `type(scope): short description`
 
 ---
 
-## Good first issues
+## Good first issues (Phase 4)
 
-These are well-scoped, self-contained, and have clear acceptance criteria:
+These are well-scoped, self-contained, and have clear acceptance criteria. See [Roadmap Phase 4](docs/en/04-roadmap.md#phase-4-api--safety-completion-high-priority) for full specs.
 
-- **WebSocket event stream** — add a `GET /ws/events` endpoint that pushes task state changes in real-time (FastAPI `WebSocket`)
-- **`blocked_by` in HTTP API** — expose the `blocked_by` field in `POST /tasks` so dependency chains can be submitted over REST
-- **ROS 2 skill adapter template** — write an `async def ros_action_skill(task)` that wraps a ROS 2 action client
-- **LLM integration guide** — extend `examples/llm_demo.py` with a real Claude or OpenAI call and add to docs
+- **`blocked_by` + `retry` in HTTP API** (4.1) — expose `blocked_by`, `max_retries`, `retry_delay` in `POST /tasks`
+- **WebSocket event stream** (4.2) — add a `GET /ws/events` endpoint that pushes task state changes in real-time
+- **Time-bounded tasks** (4.3) — `deadline` field that auto-fails overdue tasks
 
 ---
 
-## Bigger projects
+## Bigger projects (Phase 5–6)
 
-These need a design discussion (open an issue first):
+These need a design discussion (open an issue first). See [Roadmap Phase 5–6](docs/en/04-roadmap.md#phase-5-execution-isolation-medium-priority) for full specs.
 
-- **Time-bounded tasks** — `deadline` field that auto-cancels overdue tasks
-- **Task groups** — submit a set of tasks as a unit; cancel all if any fails
-- **OpenTelemetry spans** — inject trace context at state transition hooks
-- **Persistent `blocked_by`** — dependency chains that survive a full restart
+- **Subprocess skill isolation** (5.1) — run skills in child processes; crash doesn't take down the kernel
+- **Resource Domains** (5.2) — per-subsystem scheduling for multi-actuator robots
+- **Task groups** (6.1) — submit a set of tasks as a unit; cancel all if any fails
+- **ROS 2 skill adapter** (6.2) — reusable adapter wrapping ROS 2 action clients
+- **OpenTelemetry spans** (6.3) — inject trace context at state transition hooks
 
 ---
 

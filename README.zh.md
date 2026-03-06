@@ -315,17 +315,19 @@ rark/
 
 RARK 处于早期阶段，有很多有趣的方向可以探索。欢迎各个层次的贡献。
 
-**适合入门的 issue：**
-- 添加 WebSocket 端点，实时推送任务状态变化
-- 编写 ROS 2 技能适配器模板（`async def ros_skill(task)` → action client）
-- 在 HTTP 提交请求中暴露 `blocked_by` 和 `retry` 字段
-- 编写 LLM 集成指南（扩展 `examples/llm_demo.py`）
+**适合入门的 issue（Phase 4）：**
+- 在 HTTP 提交请求中暴露 `blocked_by` 和 `retry` 字段（[4.1](docs/zh/04-roadmap.md#41-http-api-暴露-blocked_by-和-retry)）
+- 添加 WebSocket 端点，实时推送任务状态变化（[4.2](docs/zh/04-roadmap.md#42-websocket-事件流)）
+- 时限任务：`deadline` 字段，超时自动失败（[4.3](docs/zh/04-roadmap.md#43-时限任务deadline)）
 
-**较大的项目：**
-- 时限任务：`deadline` 字段，超时自动取消
-- 任务组：作为一个单元提交一组任务，任意一个失败则全部取消
-- 可观测性：在状态转换钩子处注入 OpenTelemetry span
-- 持久化 `blocked_by`：让依赖链在重启后存活
+**较大的项目（Phase 5–6）：**
+- 子进程 Skill 隔离：在子进程中运行 skill，崩溃不影响内核（[5.1](docs/zh/04-roadmap.md#51-子进程-skill-隔离)）
+- 资源域：多执行器机器人的分子系统调度（[5.2](docs/zh/04-roadmap.md#52-资源域resource-domains)）
+- 任务组：作为一个单元提交一组任务，任意一个失败则全部取消（[6.1](docs/zh/04-roadmap.md#61-任务组task-groups)）
+- ROS 2 Skill 适配器模板（[6.2](docs/zh/04-roadmap.md#62-ros-2-skill-适配器模板)）
+- 在状态转换钩子处注入 OpenTelemetry span（[6.3](docs/zh/04-roadmap.md#63-opentelemetry-span-注入)）
+
+详见完整 [Roadmap](docs/zh/04-roadmap.md)。
 
 **如何贡献：**
 1. Fork 本仓库
