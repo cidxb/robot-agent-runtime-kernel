@@ -10,6 +10,8 @@ class EventType(str, Enum):
     TASK_FAIL = "task_fail"
     TASK_CANCEL = "task_cancel"
     TASK_RETRY = "task_retry"
+    TASK_PAUSE = "task_pause"
+    TASK_RESUME = "task_resume"
     INTERRUPT = "interrupt"
 
 

@@ -37,6 +37,8 @@ class RARKKernel:
             EventType.TASK_FAIL: self._on_fail,
             EventType.TASK_CANCEL: self._on_cancel,
             EventType.TASK_RETRY: self._on_retry,
+            EventType.TASK_PAUSE: self._on_pause,
+            EventType.TASK_RESUME: self._on_resume,
             EventType.INTERRUPT: self._on_interrupt,
         }
 
@@ -190,6 +192,32 @@ class RARKKernel:
             asyncio.create_task(_delayed_requeue())
         else:
             self._scheduler.add(task)
+
+    async def _on_pause(self, event: Event) -> None:
+        """Pause a specific task (does NOT re-queue; waits for explicit resume)."""
+        task = self._scheduler.get(event.task_id)
+        if task is None:
+            return
+        if self._active_task and self._active_task.id == event.task_id:
+            # Transition to PAUSED but do NOT push back to heap.
+            # The task stays paused until resume() is called.
+            task.transition(LifecycleState.PAUSED)
+            await self._store.upsert(task)
+            logger.info("paused    → %s", task.name)
+            self._active_task = None
+        elif task.state == LifecycleState.PENDING:
+            task.transition(LifecycleState.PAUSED)
+            await self._store.upsert(task)
+            logger.info("paused    → %s (was pending)", task.name)
+
+    async def _on_resume(self, event: Event) -> None:
+        """Resume a paused task."""
+        task = self._scheduler.get(event.task_id)
+        if task is None:
+            return
+        if task.state == LifecycleState.PAUSED:
+            self._scheduler.add(task)
+            logger.info("resumed   → %s", task.name)
 
     async def _on_interrupt(self, event: Event) -> None:
         """Pause the active task and inject a high-priority interrupt task."""

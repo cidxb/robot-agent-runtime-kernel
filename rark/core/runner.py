@@ -34,6 +34,16 @@ class SkillRunner(RARKKernel):
         self._scheduler.register(task)
         await self.emit(Event(type=EventType.INTERRUPT, payload={"task": task}))
 
+    async def pause(self, task_id: str) -> None:
+        """Pause a running or pending task."""
+        if self._active_task and self._active_task.id == task_id:
+            await self._cancel_running_skill()
+        await self.emit(Event(type=EventType.TASK_PAUSE, task_id=task_id))
+
+    async def resume(self, task_id: str) -> None:
+        """Resume a paused task."""
+        await self.emit(Event(type=EventType.TASK_RESUME, task_id=task_id))
+
     # ------------------------------------------------------------------
     # _tick override: detect new active task and launch its skill
     # ------------------------------------------------------------------
@@ -48,6 +58,10 @@ class SkillRunner(RARKKernel):
     # Skill lifecycle
     # ------------------------------------------------------------------
 
+    async def _checkpoint(self, task: Task) -> None:
+        """Persist task metadata to storage (called by task.checkpoint())."""
+        await self._store.upsert(task)
+
     async def _launch_skill(self, task: Task) -> None:
         fn = self._skills.get(task.name)
         if fn is None:
@@ -59,14 +73,28 @@ class SkillRunner(RARKKernel):
                 )
             )
             return
+        # Inject checkpoint callback so skills can persist mid-execution
+        task._checkpoint_fn = self._checkpoint
         skill_task = asyncio.create_task(self._run_skill(task, fn))
         self._running_skill_task = skill_task
         skill_task.add_done_callback(self._on_skill_done)
 
     async def _run_skill(self, task: Task, fn: Callable[[Task], Coroutine]) -> None:
         try:
-            await fn(task)
+            timeout = task.metadata.get("timeout")
+            if timeout is not None:
+                await asyncio.wait_for(fn(task), timeout=float(timeout))
+            else:
+                await fn(task)
             await self.emit(Event(type=EventType.TASK_COMPLETE, task_id=task.id))
+        except asyncio.TimeoutError:
+            await self.emit(
+                Event(
+                    type=EventType.TASK_FAIL,
+                    task_id=task.id,
+                    payload={"error": f"timeout after {task.metadata.get('timeout')}s"},
+                )
+            )
         except asyncio.CancelledError:
             raise
         except Exception as e:
